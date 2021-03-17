@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "502809572070",
+    "project_id": "speedy-district-306903",
+    "storage_bucket": "speedy-district-306903.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502809572070:android:f15d4ff78756584d37c127",
+        "android_client_info": {
+          "package_name": "com.example.bijou"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "502809572070-km2lp6vmuqt0cp8pk5qnc6vgqq9ernj7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBc1cl7Sbren4wUAGzNorkZkqYcJ6op2EU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "502809572070-km2lp6vmuqt0cp8pk5qnc6vgqq9ernj7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
