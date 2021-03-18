@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:async/async.dart';
 //when connect auth:
@@ -72,11 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: getPageInfo(),
-      builder: (ctx, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && discoverStore.isNotEmpty) {
-          return Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
@@ -106,29 +103,34 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
         ),
-      GridView.count(
-        padding: EdgeInsets.only(left: 10.0, right: 10.0),
-            crossAxisCount: 2,
-            crossAxisSpacing: 4.0,
-            mainAxisSpacing: 4.0,
-            primary: false,
-            shrinkWrap: true,
-            children: discoverStore.map((element) {
+      FutureBuilder(
+      future: getPageInfo(),
+      builder: (ctx, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && discoverStore.isNotEmpty) {
+        return Container(
+            alignment: Alignment.center,
+            margin: EdgeInsets.all(2),
+            padding: EdgeInsets.all(2),
+            child:GridView.count(
+              padding: EdgeInsets.only(left: 4.0, right: 4.0),
+              crossAxisCount: 2,
+              crossAxisSpacing: 4.0,
+              mainAxisSpacing: 4.0,
+              primary: false,
+              shrinkWrap: true,
+              children: discoverStore.map((element) {
               return buildResultCard(element);
             }).toList()
-      )
-    ])      
-    );
-        }
-        else {
+          ));
+        } else {
           return Center(
             child: CircularProgressIndicator()
           );
         }
-      }
-    );
-    
-  }
+      }),
+    ],),
+  );
+}
 }
 
 Widget buildResultCard(data) {
