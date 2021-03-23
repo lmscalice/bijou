@@ -84,8 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: EdgeInsets.all(20),
             child:ToggleButtons(
               children: <Widget>[
-                Icon(Icons.ac_unit),
-                Icon(Icons.call),
+                Icon(Icons.public),
+                Icon(Icons.person),
               ],
               isSelected: _selections,
               onPressed: (int index) {
@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: EdgeInsets.all(2),
             child:GridView.count(
               padding: EdgeInsets.only(left: 4.0, right: 4.0),
-              crossAxisCount: 2,
+              crossAxisCount: 1,
               crossAxisSpacing: 4.0,
               mainAxisSpacing: 4.0,
               primary: false,
@@ -135,17 +135,43 @@ class _MyHomePageState extends State<MyHomePage> {
 
 Widget buildResultCard(data) {
   return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      elevation: 2.0,
-      child: Container(
-          child: Center(
-        child: Text(
-          data['Name'],
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20.0,
-          ),
-        ),
-      )));
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8.0),
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: Image.network(data['Image'],
+                        height: 315,
+                        width: 3150,
+                        fit:BoxFit.contain,
+                    ),
+                ),
+                const Divider(
+                  height:0,
+                  thickness: 1,
+                ),
+                
+                ButtonBar(
+                  //alignment: MainAxisAlignment.start,
+                  alignment: MainAxisAlignment.spaceBetween,
+                  buttonHeight: 10,
+                  children: [
+                    TextButton(
+                      onPressed: () {},
+                      child: Text(data['Name'],style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                    ),
+                    FloatingActionButton(
+                      onPressed: () {print(data['y']);} ,
+                      child: Icon(Icons.add, size: 18),
+                      backgroundColor: Colors.red,
+                    )
+                  ],
+                ),
+              ]
+            )
+);
+          
 }
