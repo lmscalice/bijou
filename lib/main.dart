@@ -51,10 +51,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return this._memoizer.runOnce(() async 
     {
       var ref = await FirebaseDatabase.instance.reference().child('Customers/1234567890/Searches/');
-      
       ref.once().then((DataSnapshot snapshot) async {
         
-        dbResultSet = snapshot.value.cast<String>();
+        dbResultSet = snapshot.value.keys.cast<String>().toList();
 
         await FirebaseFirestore.instance.collection("Products").where('Keys', arrayContainsAny: dbResultSet).get().then((querySnapshot) => 
         {
@@ -134,6 +133,24 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 Widget buildResultCard(data) {
+  List<String> boards;
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+
+  Future fetchUserInfo() async 
+  {
+    return _memoizer.runOnce(() async 
+    {
+      print("GET HERE?");
+      var ref = FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/');
+      
+      ref.once().then((DataSnapshot snapshot) async {
+        print("HOW ABOUT HERE?");
+        boards = snapshot.value.keys.cast<String>().toList();
+        boards.add("New Board");
+        print(boards);
+      });
+    });
+  }
   return Card(
             clipBehavior: Clip.antiAlias,
             child: Column(
@@ -155,7 +172,7 @@ Widget buildResultCard(data) {
                 ),
                 
                 ButtonBar(
-                  //alignment: MainAxisAlignment.start,
+
                   alignment: MainAxisAlignment.spaceBetween,
                   buttonHeight: 10,
                   children: [
@@ -163,9 +180,49 @@ Widget buildResultCard(data) {
                       onPressed: () {},
                       child: Text(data['Name'],style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     ),
+
                     FloatingActionButton(
-                      onPressed: () {print(data['y']);} ,
-                      child: Icon(Icons.add, size: 18),
+                      onPressed: () => fetchUserInfo(),//{print(data['y']);} ,
+                      child:FutureBuilder(
+                          future: fetchUserInfo(),
+                          builder: (ctx, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done){
+                            return PopupMenuButton(
+                                initialValue: 2,
+                                child: Center(
+                                child: Icon(Icons.add)),
+                                itemBuilder: (context) {
+                                  return List.generate(boards.length, (index) {
+                                    print("HERE NOW");
+                                    return PopupMenuItem(
+                                      value: index,
+                                      child: Text(boards[index].toString()),
+                                    );
+                                  });
+                                },
+                                onSelected: (int index) async {
+                                    if (index != boards.length-1)
+                                    {
+                                        String board_chosen = boards[index];
+                                        String pin = data['id'];
+                                        FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$board_chosen/').update({
+                                          '$pin':'true'
+                                        });
+                                    }
+                                    /*else
+                                    {
+                                      return 
+                                    }
+                                    print('index is $index');*/
+                                },
+                              );
+                          }
+                          else
+                          {
+                            print("SKIPPING?");
+                          }
+                      }),
+
                       backgroundColor: Colors.red,
                     )
                   ],
