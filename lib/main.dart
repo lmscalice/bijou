@@ -63,6 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
         print("HOW ABOUT HERE?");
         boards = snapshot.value.keys.cast<String>().toList();
         boards.add("New Board");
+        if (boards.contains("Bijou Favorites"))
+        {
+          boards.remove("Bijou Favorites");
+        }
         print(boards);
       });
     });
@@ -79,6 +83,10 @@ class _MyHomePageState extends State<MyHomePage> {
         print("HOW ABOUT HERE?");
         boards = snapshot.value.keys.cast<String>().toList();
         boards.add("New Board");
+        if (boards.contains("Bijou Favorites"))
+        {
+          boards.remove("Bijou Favorites");
+        }
         print(boards);
       });
     });
