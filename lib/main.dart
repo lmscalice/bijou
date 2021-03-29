@@ -46,6 +46,217 @@ class _MyHomePageState extends State<MyHomePage> {
   var discoverStore = [];
   final AsyncMemoizer _memoizer = AsyncMemoizer();
 
+  Widget buildResultCard(data) {
+  List<String> boards;
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+  final _formKey = GlobalKey<FormState>();
+  var textValue = "";
+
+  Future fetchUserInfo() async 
+  {
+    return _memoizer.runOnce(() async 
+    {
+      print("GET HERE?");
+      var ref = FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/');
+
+      ref.once().then((DataSnapshot snapshot) async {
+        print("HOW ABOUT HERE?");
+        boards = snapshot.value.keys.cast<String>().toList();
+        boards.add("New Board");
+        print(boards);
+      });
+    });
+  }
+
+  Future fetchUserInfo1() async 
+  {
+    return _memoizer.runOnce(() async 
+    {
+      print("GET HERE?");
+      var ref = FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/');
+      
+      ref.once().then((DataSnapshot snapshot) async {
+        print("HOW ABOUT HERE?");
+        boards = snapshot.value.keys.cast<String>().toList();
+        boards.add("New Board");
+        print(boards);
+      });
+    });
+  }
+
+  return Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8.0),
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: Image.network(data['Image'],
+                        height: 315,
+                        width: 3150,
+                        fit:BoxFit.contain,
+                    ),
+                ),
+                const Divider(
+                  height:0,
+                  thickness: 1,
+                ),
+                
+                ButtonBar(
+
+                  alignment: MainAxisAlignment.spaceBetween,
+                  buttonHeight: 10,
+                  children: [
+                    TextButton(
+                      onPressed: () {},
+                      child: Text(data['Name'],style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                    ),
+
+                    FloatingActionButton(
+                      //onPressed: () => {print("ONPRESSED?!"), boards = []},//fetchUserInfo1(),//{print(data['y']);} ,
+                      child:FutureBuilder(
+                          future: fetchUserInfo(),
+                          builder: (ctx, snapshot) {
+                          //fetchUserInfo1();
+                          if (snapshot.connectionState == ConnectionState.done && boards != null){
+                            return PopupMenuButton(
+                                initialValue: 2,
+                                child: Center(
+                                child: Icon(Icons.add)),
+                                itemBuilder: (context) {
+                                  return List.generate(boards.length, (index) {
+                                    print("HERE NOW");
+                                    return PopupMenuItem(
+                                      value: index,
+                                      child: Text(boards[index].toString()),
+                                    );
+                                  });
+                                },
+                                onSelected: (int index) async {
+                                    if (index != boards.length-1)
+                                    {
+                                        String board_chosen = boards[index];
+                                        String pin = data['id'];
+                                        String type = data['type'] == 'business' ? 'Business' : 'Product';
+                                        FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$board_chosen/$type').update({
+                                          '$pin':'true'
+                                        });
+                                    }
+                                    else
+                                    {
+                                      showDialog<void>(
+                                      context: ctx,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          content: Stack(
+                                            overflow: Overflow.visible,
+                                            children: <Widget>[
+                                              Positioned(
+                                                right: -40.0,
+                                                top: -40.0,
+                                                child: InkResponse(
+                                                  onTap: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: CircleAvatar(
+                                                    child: Icon(Icons.close),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                ),
+                                              ),
+                                              Form(
+                                                key: _formKey,
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: <Widget>[
+                                                    Padding(
+                                                      padding: EdgeInsets.all(8.0),
+                                                      child: Text("Enter Board Name")
+                                                    ),
+                                                    Padding(
+                                                      padding: EdgeInsets.all(8.0),
+                                                      child: TextFormField(
+                                                        onChanged :(v){
+                                                          textValue =  v;
+                                                        }),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: RaisedButton(
+                                                        child: Text("Create Board and Add Pin"),
+                                                        onPressed: () {
+                                                          if(textValue.isEmpty)
+                                                          {
+                                                            showDialog<void>(
+                                                            context: ctx,
+                                                            //print("EMPTY");
+                                                            builder: (BuildContext context) { 
+                                                            return AlertDialog(
+                                                              title: Text('Please Enter A Board Name'),
+                                                              actions: <Widget>[
+                                                                TextButton(
+                                                                  child: Text('Ok'),
+                                                                  onPressed: () {
+                                                                    Navigator.of(context).pop();
+                                                                  },
+                                                                ),
+                                                              ],
+                                                            );
+                                                          });
+                                                          }                                                           
+                                                    
+                                                          else
+                                                          {
+                                                            print("Running new board fct");
+                                                            String pin = data['id'];
+                                                            String type = data['type'] == 'business' ? 'Business' : 'Product';
+                                                            String deftype = data['type'] != 'business' ? 'Business' : 'Product';
+                                                            FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$textValue/$type').set({
+                                                              '$pin':'true'
+                                                            });
+                                                            FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$textValue/$deftype').set({
+                                                              'default':'true'
+                                                            });
+                                                            textValue = "";
+                                                            Navigator.of(context).pop();
+                                                            setState((){fetchUserInfo1();});
+                                                          }
+
+                                                        }
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      });
+                                    }
+                                },
+                              );
+                          }
+                          else
+                          {
+                            //fetchUserInfo1();
+                            return Container(width: 0.0, height: 0.0);
+                            //print("SKIPPING?");
+                          }
+                      }),
+
+                      backgroundColor: Colors.red,
+                    )
+                  ],
+                ),
+              ]
+            )
+);
+          
+}
+
+
   Future initially() async 
   {
     return this._memoizer.runOnce(() async 
@@ -162,16 +373,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   //tempSearchStore = [];
                   for (int k =0; k<num_pins; k++)
                   {
-                    await FirebaseFirestore.instance.collection("Products").doc(dbResultSetProds[k]).get().then((querySnapshot) => 
+                    print("Current try:" + dbResultSetProds[k]);
+                    if (dbResultSetProds[k] != "default")
                     {
-                      print("CURR PROD:" + querySnapshot.data().toString() ),
-                      //tempSearchStore.add(querySnapshot.data()),
-                      setState(() {
-                        discoverStore.add(querySnapshot.data());
-                        //print("From:");
-                        //print(discoverStore[k]);
-                      })
-                    });
+                      await FirebaseFirestore.instance.collection("Products").doc(dbResultSetProds[k]).get().then((querySnapshot) => 
+                      {
+                        print("CURR PROD:" + querySnapshot.data().toString() ),
+                        //tempSearchStore.add(querySnapshot.data()),
+                        setState(() {
+                          discoverStore.add(querySnapshot.data());
+                          //print("From:");
+                          //print(discoverStore[k]);
+                        })
+                      });
+                    }
                   }
                   //tempSearchStore = []; 
                 });  
@@ -185,16 +400,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   for (int k =0; k<num_pins; k++)
                   {
-                    await FirebaseFirestore.instance.collection("Businesses").doc(dbResultSetProds[k]).get().then((querySnapshot) => 
+                    print("Current try:" + dbResultSetProds[k]);
+                    if (dbResultSetProds[k] != "default")
                     {
-                      print("CURR PROD:" + querySnapshot.data().toString() ),
-                      //tempSearchStore.add(querySnapshot.data()),
-                      setState(() {
-                        discoverStore.add(querySnapshot.data());
-                        //print("From:");
-                        //print(discoverStore[k]);
-                      })
-                    });
+                      await FirebaseFirestore.instance.collection("Businesses").doc(dbResultSetProds[k]).get().then((querySnapshot) => 
+                      {
+                        print("CURR PROD:" + querySnapshot.data().toString() ),
+                        //tempSearchStore.add(querySnapshot.data()),
+                        setState(() {
+                          discoverStore.add(querySnapshot.data());
+                          //print("From:");
+                          //print(discoverStore[k]);
+                        })
+                      });
+                    }
                   }
                   //tempSearchStore = [];
                 });
@@ -270,186 +489,3 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 }
 
-Widget buildResultCard(data) {
-  List<String> boards;
-  final AsyncMemoizer _memoizer = AsyncMemoizer();
-  final _formKey = GlobalKey<FormState>();
-  var textValue = "";
-
-  Future fetchUserInfo() async 
-  {
-    return _memoizer.runOnce(() async 
-    {
-      print("GET HERE?");
-      var ref = FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/');
-      
-      ref.once().then((DataSnapshot snapshot) async {
-        print("HOW ABOUT HERE?");
-        boards = snapshot.value.keys.cast<String>().toList();
-        boards.add("New Board");
-        print(boards);
-      });
-    });
-  }
-  return Card(
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8.0),
-                      topRight: Radius.circular(8.0),
-                    ),
-                    child: Image.network(data['Image1'],
-                        height: 315,
-                        width: 3150,
-                        fit:BoxFit.contain,
-                    ),
-                ),
-                const Divider(
-                  height:0,
-                  thickness: 1,
-                ),
-                
-                ButtonBar(
-
-                  alignment: MainAxisAlignment.spaceBetween,
-                  buttonHeight: 10,
-                  children: [
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(data['Name'],style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                    ),
-
-                    FloatingActionButton(
-                      onPressed: () => fetchUserInfo(),//{print(data['y']);} ,
-                      child:FutureBuilder(
-                          future: fetchUserInfo(),
-                          builder: (ctx, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done){
-                            return PopupMenuButton(
-                                initialValue: 2,
-                                child: Center(
-                                child: Icon(Icons.add)),
-                                itemBuilder: (context) {
-                                  return List.generate(boards.length, (index) {
-                                    print("HERE NOW");
-                                    return PopupMenuItem(
-                                      value: index,
-                                      child: Text(boards[index].toString()),
-                                    );
-                                  });
-                                },
-                                onSelected: (int index) async {
-                                    if (index != boards.length-1)
-                                    {
-                                        String board_chosen = boards[index];
-                                        String pin = data['id'];
-                                        FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$board_chosen/').update({
-                                          '$pin':'true'
-                                        });
-                                    }
-                                    else
-                                    {
-                                      showDialog<void>(
-                                      context: ctx,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          content: Stack(
-                                            overflow: Overflow.visible,
-                                            children: <Widget>[
-                                              Positioned(
-                                                right: -40.0,
-                                                top: -40.0,
-                                                child: InkResponse(
-                                                  onTap: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: CircleAvatar(
-                                                    child: Icon(Icons.close),
-                                                    backgroundColor: Colors.red,
-                                                  ),
-                                                ),
-                                              ),
-                                              Form(
-                                                key: _formKey,
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: <Widget>[
-                                                    Padding(
-                                                      padding: EdgeInsets.all(8.0),
-                                                      child: Text("Enter Board Name")
-                                                    ),
-                                                    Padding(
-                                                      padding: EdgeInsets.all(8.0),
-                                                      child: TextFormField(
-                                                        onChanged :(v){
-                                                          textValue =  v;
-                                                        }),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: RaisedButton(
-                                                        child: Text("Create Board and Add Pin"),
-                                                        onPressed: () {
-                                                          if(textValue.isEmpty)
-                                                          {
-                                                            showDialog<void>(
-                                                            context: ctx,
-                                                            //print("EMPTY");
-                                                            builder: (BuildContext context) { 
-                                                            return AlertDialog(
-                                                              title: Text('Please Enter A Board Name'),
-                                                              actions: <Widget>[
-                                                                TextButton(
-                                                                  child: Text('Ok'),
-                                                                  onPressed: () {
-                                                                    Navigator.of(context).pop();
-                                                                  },
-                                                                ),
-                                                              ],
-                                                            );
-                                                          });
-                                                          }                                                           
-                                                    
-                                                          else
-                                                          {
-                                                            print("Running new board fct");
-                                                            String pin = data['id'];
-                                                            FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$textValue/').set({
-                                                              '$pin':'true'
-                                                            });
-                                                            textValue = "";
-                                                            Navigator.of(context).pop();
-                                                          }
-
-                                                        }
-                                                      ),
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      });
-                                    }
-                                },
-                              );
-                          }
-                          else
-                          {
-                            return Container(width: 0.0, height: 0.0);
-                            //print("SKIPPING?");
-                          }
-                      }),
-
-                      backgroundColor: Colors.red,
-                    )
-                  ],
-                ),
-              ]
-            )
-);
-          
-}
