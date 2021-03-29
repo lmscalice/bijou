@@ -46,28 +46,166 @@ class _MyHomePageState extends State<MyHomePage> {
   var discoverStore = [];
   final AsyncMemoizer _memoizer = AsyncMemoizer();
 
-  Future getPageInfo() async 
+  Future initially() async 
   {
     return this._memoizer.runOnce(() async 
     {
-      var ref = await FirebaseDatabase.instance.reference().child('Customers/1234567890/Searches/');
-      ref.once().then((DataSnapshot snapshot) async {
-        
-        dbResultSet = snapshot.value.keys.cast<String>().toList();
+              var ref = await FirebaseDatabase.instance.reference().child('Customers/1234567890/Searches/');
+        ref.once().then((DataSnapshot snapshot) async {
+          
+          dbResultSet = snapshot.value.keys.cast<String>().toList();
 
-        await FirebaseFirestore.instance.collection("Products").where('Keys', arrayContainsAny: dbResultSet).get().then((querySnapshot) => 
-        {
-            for (int i = 0; i < querySnapshot.docs.length; i++) {
-                tempSearchStore.add(querySnapshot.docs.elementAt(i).data()),
-                setState(() {
-                  discoverStore.add(tempSearchStore[i]);
-                  print("From:");
-                  print(discoverStore[i]);
-                })
-            }   
+          await FirebaseFirestore.instance.collection("Products").where('Keys', arrayContainsAny: dbResultSet).get().then((querySnapshot) => 
+          {
+              for (int i = 0; i < querySnapshot.docs.length; i++) {
+                  //tempSearchStore.add(querySnapshot.docs.elementAt(i).data()),
+                  setState(() {
+                    discoverStore.add(querySnapshot.docs.elementAt(i).data());
+                    //print("From:");
+                    //print(discoverStore[i]);
+                  })
+              }   
+          });
+
+          await FirebaseFirestore.instance.collection("Businesses").where('SearchKey', arrayContainsAny: dbResultSet).get().then((querySnapshot) => 
+          {
+              for (int i = 0; i < querySnapshot.docs.length; i++) {
+                  //tempSearchStore.add(querySnapshot.docs.elementAt(i).data()),
+                  setState(() {
+                    discoverStore.add(querySnapshot.docs.elementAt(i).data());
+                    //print("From:");
+                    //print(discoverStore[i]);
+                  })
+              }   
+          });
+
         });
-      });
-    });  
+
+    });
+  }
+
+  Future getPageInfo() async 
+  {
+    //return this._memoizer.runOnce(() async 
+    //{
+      print(_selections[0]);
+      print(_selections[1]);
+      discoverStore = [];
+      tempSearchStore = [];
+
+      if (_selections[0])
+      {
+        var ref = await FirebaseDatabase.instance.reference().child('Customers/1234567890/Searches/');
+        ref.once().then((DataSnapshot snapshot) async {
+          
+          dbResultSet = snapshot.value.keys.cast<String>().toList();
+
+          await FirebaseFirestore.instance.collection("Products").where('Keys', arrayContainsAny: dbResultSet).get().then((querySnapshot) => 
+          {
+              for (int i = 0; i < querySnapshot.docs.length; i++) {
+                  //tempSearchStore.add(querySnapshot.docs.elementAt(i).data()),
+                  setState(() {
+                    discoverStore.add(querySnapshot.docs.elementAt(i).data());
+                    //print("From:");
+                    //print(discoverStore[i]);
+                  })
+              }   
+          });
+
+          await FirebaseFirestore.instance.collection("Businesses").where('SearchKey', arrayContainsAny: dbResultSet).get().then((querySnapshot) => 
+          {
+              for (int i = 0; i < querySnapshot.docs.length; i++) {
+                  //tempSearchStore.add(querySnapshot.docs.elementAt(i).data()),
+                  setState(() {
+                    discoverStore.add(querySnapshot.docs.elementAt(i).data());
+                    //print("From:");
+                    //print(discoverStore[i]);
+                  })
+              }   
+          });
+
+        });
+      }
+      else
+      {
+        print("FOLLOWING PAGE RUNNING");
+        var ref = await FirebaseDatabase.instance.reference().child('Customers/1234567890/Following/');
+        ref.once().then((DataSnapshot snapshot) async {
+          
+          dbResultSet = snapshot.value.keys.cast<String>().toList();
+          var length = dbResultSet.length;
+          print("GOT FOLLOWERS");
+        
+          for (int i =0; i<length; i++)
+          {
+            var currfol = dbResultSet[i];
+            print("CURR FOLLOWER:" + currfol);
+            var ref1 = await FirebaseDatabase.instance.reference().child('Customers/$currfol/Boards/');
+            ref1.once().then((DataSnapshot snapshot) async {
+              
+              var dbResultSetBoards = snapshot.value.keys.cast<String>().toList();
+              var num_boards = dbResultSetBoards.length;
+              print("GOT BOARDS");
+
+              for (int j =0; j<num_boards; j++)
+              {
+                var currBoard = dbResultSetBoards[j];
+                print("CURR BOARD:" + currBoard);
+                var ref2 = await FirebaseDatabase.instance.reference().child('Customers/$currfol/Boards/$currBoard/Product');
+                print("CURR REF:" + ref1.toString());
+                ref2.once().then((DataSnapshot snapshot) async {
+                  print("PRODS:" + snapshot.value.keys.toString());
+                  var dbResultSetProds = snapshot.value.keys.cast<String>().toList();
+                  var num_pins = dbResultSetProds.length;
+                  print("GOT PROD PINS");
+
+                  //tempSearchStore = [];
+                  for (int k =0; k<num_pins; k++)
+                  {
+                    await FirebaseFirestore.instance.collection("Products").doc(dbResultSetProds[k]).get().then((querySnapshot) => 
+                    {
+                      print("CURR PROD:" + querySnapshot.data().toString() ),
+                      //tempSearchStore.add(querySnapshot.data()),
+                      setState(() {
+                        discoverStore.add(querySnapshot.data());
+                        //print("From:");
+                        //print(discoverStore[k]);
+                      })
+                    });
+                  }
+                  //tempSearchStore = []; 
+                });  
+
+                var ref3 = await FirebaseDatabase.instance.reference().child('Customers/$currfol/Boards/$currBoard/Business');
+                ref3.once().then((DataSnapshot snapshot) async {
+                  print("BUS:" + snapshot.value.keys.toString());
+                  var dbResultSetProds = snapshot.value.keys.cast<String>().toList();
+                  var num_pins = dbResultSetProds.length;
+                  print("GOT BUS PINS");
+
+                  for (int k =0; k<num_pins; k++)
+                  {
+                    await FirebaseFirestore.instance.collection("Businesses").doc(dbResultSetProds[k]).get().then((querySnapshot) => 
+                    {
+                      print("CURR PROD:" + querySnapshot.data().toString() ),
+                      //tempSearchStore.add(querySnapshot.data()),
+                      setState(() {
+                        discoverStore.add(querySnapshot.data());
+                        //print("From:");
+                        //print(discoverStore[k]);
+                      })
+                    });
+                  }
+                  //tempSearchStore = [];
+                });
+             }
+            });
+
+          }
+          
+        });
+      }
+    //});  
   }
 
   @override
@@ -103,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
         ),
       FutureBuilder(
-      future: getPageInfo(),
+      future: initially(),
       builder: (ctx, snapshot) {
         if (snapshot.connectionState == ConnectionState.done && discoverStore.isNotEmpty) {
         return Container(
@@ -121,11 +259,11 @@ class _MyHomePageState extends State<MyHomePage> {
               return buildResultCard(element);
             }).toList()
           ));
-        } else {
+        } //else {
           return Center(
             child: CircularProgressIndicator()
           );
-        }
+        //}
       }),
     ],),
   );
@@ -135,6 +273,8 @@ class _MyHomePageState extends State<MyHomePage> {
 Widget buildResultCard(data) {
   List<String> boards;
   final AsyncMemoizer _memoizer = AsyncMemoizer();
+  final _formKey = GlobalKey<FormState>();
+  var textValue = "";
 
   Future fetchUserInfo() async 
   {
@@ -160,7 +300,7 @@ Widget buildResultCard(data) {
                       topLeft: Radius.circular(8.0),
                       topRight: Radius.circular(8.0),
                     ),
-                    child: Image.network(data['Image'],
+                    child: Image.network(data['Image1'],
                         height: 315,
                         width: 3150,
                         fit:BoxFit.contain,
@@ -209,17 +349,98 @@ Widget buildResultCard(data) {
                                           '$pin':'true'
                                         });
                                     }
-                                    /*else
+                                    else
                                     {
-                                      return 
+                                      showDialog<void>(
+                                      context: ctx,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          content: Stack(
+                                            overflow: Overflow.visible,
+                                            children: <Widget>[
+                                              Positioned(
+                                                right: -40.0,
+                                                top: -40.0,
+                                                child: InkResponse(
+                                                  onTap: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: CircleAvatar(
+                                                    child: Icon(Icons.close),
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                ),
+                                              ),
+                                              Form(
+                                                key: _formKey,
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: <Widget>[
+                                                    Padding(
+                                                      padding: EdgeInsets.all(8.0),
+                                                      child: Text("Enter Board Name")
+                                                    ),
+                                                    Padding(
+                                                      padding: EdgeInsets.all(8.0),
+                                                      child: TextFormField(
+                                                        onChanged :(v){
+                                                          textValue =  v;
+                                                        }),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: RaisedButton(
+                                                        child: Text("Create Board and Add Pin"),
+                                                        onPressed: () {
+                                                          if(textValue.isEmpty)
+                                                          {
+                                                            showDialog<void>(
+                                                            context: ctx,
+                                                            //print("EMPTY");
+                                                            builder: (BuildContext context) { 
+                                                            return AlertDialog(
+                                                              title: Text('Please Enter A Board Name'),
+                                                              actions: <Widget>[
+                                                                TextButton(
+                                                                  child: Text('Ok'),
+                                                                  onPressed: () {
+                                                                    Navigator.of(context).pop();
+                                                                  },
+                                                                ),
+                                                              ],
+                                                            );
+                                                          });
+                                                          }                                                           
+                                                    
+                                                          else
+                                                          {
+                                                            print("Running new board fct");
+                                                            String pin = data['id'];
+                                                            FirebaseDatabase.instance.reference().child('Customers/1234567890/Boards/$textValue/').set({
+                                                              '$pin':'true'
+                                                            });
+                                                            textValue = "";
+                                                            Navigator.of(context).pop();
+                                                          }
+
+                                                        }
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      });
                                     }
-                                    print('index is $index');*/
                                 },
                               );
                           }
                           else
                           {
-                            print("SKIPPING?");
+                            return Container(width: 0.0, height: 0.0);
+                            //print("SKIPPING?");
                           }
                       }),
 
